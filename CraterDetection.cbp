@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="CraterDetection" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/CraterDetection" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/CraterDetection" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+			<Add directory="/usr/local" />
+			<Add directory="/usr/include" />
+			<Add directory="/usr/lib" />
+			<Add directory="/home/david/Project/CraterDetection/libCluster" />
+			<Add directory="/home/david/Project/CraterDetection/libSVM" />
+			<Add directory="/home/david/Project/CraterDetection/Surf" />
+			<Add directory="/home/david/Projects/CraterDetection/Sift" />
+			<Add directory="/home/david/Project/CraterDetection/Sift/include" />
+			<Add directory="/home/david/Project/CraterDetection/Sift/src" />
+			<Add directory="/usr/include/opencv" />
+			<Add directory="/usr/include/gtk-2.0" />
+			<Add directory="/usr/include/glib-2.0" />
+			<Add directory="/usr/include/cairo" />
+			<Add directory="/usr/include/gtk-2.0/gdk" />
+			<Add directory="/usr/lib/glib-2.0/include" />
+			<Add directory="/usr/lib/gtk-2.0/include" />
+			<Add directory="/usr/include/pango-1.0" />
+			<Add directory="/usr/include/atk-1.0" />
+		</Compiler>
+		<Linker>
+			<Add library="/usr/lib/libcv.so" />
+			<Add library="/usr/lib/libcvaux.so" />
+			<Add library="/usr/lib/libcxcore.so" />
+			<Add library="/usr/lib/libhighgui.so" />
+			<Add library="/usr/lib/libml.so" />
+			<Add library="/usr/lib/libgtk-x11-2.0.so" />
+			<Add library="/usr/lib/libgsl.a" />
+			<Add directory="/usr/local" />
+			<Add directory="/usr/lib" />
+			<Add directory="/usr/include" />
+		</Linker>
+		<Unit filename="Sift/include/imgfeatures.h" />
+		<Unit filename="Sift/include/kdtree.h" />
+		<Unit filename="Sift/include/minpq.h" />
+		<Unit filename="Sift/include/sift.h" />
+		<Unit filename="Sift/include/utils.h" />
+		<Unit filename="Sift/include/xform.h" />
+		<Unit filename="Sift/src/imgfeatures.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Sift/src/kdtree.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Sift/src/minpq.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Sift/src/sift.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Sift/src/utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Sift/src/xform.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Surf/fasthessian.cpp" />
+		<Unit filename="Surf/fasthessian.h" />
+		<Unit filename="Surf/integral.cpp" />
+		<Unit filename="Surf/integral.h" />
+		<Unit filename="Surf/ipoint.cpp" />
+		<Unit filename="Surf/ipoint.h" />
+		<Unit filename="Surf/kmeans.h" />
+		<Unit filename="Surf/responselayer.h" />
+		<Unit filename="Surf/surf.cpp" />
+		<Unit filename="Surf/surf.h" />
+		<Unit filename="Surf/surflib.h" />
+		<Unit filename="Surf/util.cpp" />
+		<Unit filename="Surf/util.h" />
+		<Unit filename="bagoffeatures.cpp" />
+		<Unit filename="bagoffeatures.h" />
+		<Unit filename="datasetinfo.cpp" />
+		<Unit filename="datasetinfo.h" />
+		<Unit filename="imagefeatures.cpp" />
+		<Unit filename="imagefeatures.h" />
+		<Unit filename="libCluster/cluster.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="libCluster/cluster.h" />
+		<Unit filename="libCluster/command.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="libCluster/command.h" />
+		<Unit filename="libCluster/data.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="libCluster/data.h" />
+		<Unit filename="libCluster/gui.h" />
+		<Unit filename="libSVM/svm.cpp" />
+		<Unit filename="libSVM/svm.h" />
+		<Unit filename="main.cpp" />
+		<Extensions>
+			<envvars />
+			<code_completion />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
