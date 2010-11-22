@@ -103,7 +103,7 @@ class BagOfFeatures
                         int termType, int iterations, double eps,
                         char* fileName);
 
-        void trainNormBayes_CV(char* fileName);
+        void trainNormBayes_CV();
 
         // Computing the results
         float* resultsTraining();
@@ -133,7 +133,9 @@ class BagOfFeatures
         struct svm_model *SVMModel;
 
         CvSVMParams SVMParam_CV;
-        CvSVM SVMModel_CV;
+        CvSVM* SVMModel_CV;
+
+        CvNormalBayesClassifier* NBModel_CV;
         //char classifierFile[64];
 
 };

@@ -31,7 +31,8 @@ BagOfFeatures::BagOfFeatures()
     dictionary = NULL;
     SVMModel = NULL;
     classifierType = -1;
-    //SVMModel_CV = NULL;
+    SVMModel_CV = NULL;
+    NBModel_CV = NULL;
 }
 
 BagOfFeatures::BagOfFeatures(const int n, DataSet* val)
@@ -43,7 +44,8 @@ BagOfFeatures::BagOfFeatures(const int n, DataSet* val)
     descrSize = 0;
     dictionary = NULL;
     SVMModel = NULL;
-    //SVMModel_CV = NULL;
+    SVMModel_CV = NULL;
+    NBModel_CV = NULL;
     testObject = new ObjectSet [n];
     validObject = new ObjectSet [n];
     trainObject = new ObjectSet [n];
@@ -89,7 +91,6 @@ void BagOfFeatures::allocBoF(const int n, DataSet* val)
         delete [] trainObject;
         delete [] data;
     }
-
 
     numClasses = n;
     numFeatures = 0;
@@ -401,6 +402,20 @@ bool BagOfFeatures::buildHierarchicalTree(int transpose=0,
 	for(i = 0; i < numFeatures; i++)
 		hClusterData[i] = new double [descrSize];
 
+    // Allocate mask and set it all to 1 (assume no missing data)
+	int ** mask = new int* [numFeatures];
+	for(i = 0; i < numFeatures; i++)
+		mask[i] = new int [descrSize];
+	for(i = 0; i < numFeatures; i++)
+		for(j = 0; j< descrSize; j++)
+			mask[i][j] = 1;
+
+	// Set the weights equal, all 1
+	double * weight = new double [descrSize];
+	for(i = 0; i < descrSize; i++)
+		weight[i] = 1.0;
+
+
 	// For each class
     for(m = 0; m < numClasses; m++)
     {
@@ -416,25 +431,13 @@ bool BagOfFeatures::buildHierarchicalTree(int transpose=0,
                 for(j = 0; j < descrSize; j++)
                 {
                     hClusterData[k][j] = (double)trainObject[m].featureSet[l].descriptors[i][j];
+                    //cout << hClusterData[k][j] << " ";
                 }
+                //cout << endl;
                 k++;
             }
         }
     }
-
-
-	// Allocate mask and set it all to 1 (assume no missing data)
-	int ** mask = new int* [numFeatures];
-	for(i = 0; i < numFeatures; i++)
-		mask[i] = new int [descrSize];
-	for(i = 0; i < numFeatures; i++)
-		for(j = 0; j< descrSize; j++)
-			mask[i][j] = 1;
-
-	// Set the weights equal, all 1
-	double * weight = new double [descrSize];
-	for(i = 0; i < descrSize; i++)
-		weight[i] = 1.0;
 
 	// Centroid Hierarchical Clustering
 	// feature_count X DESCRIPTOR_SIZE
@@ -471,11 +474,9 @@ bool BagOfFeatures::cutHierarchicalTree(int numClusters)
     if(dictionary != NULL)
         cvReleaseMat(&dictionary);
     int i, j, index;
-
     float *ptrCenter;
 
     int *clusterID = new int [numFeatures];
-
 	int *indexCount = new int [numClusters];
 	// initialize the count to zero
 	for(i = 0; i < numClusters; i++)
@@ -488,6 +489,7 @@ bool BagOfFeatures::cutHierarchicalTree(int numClusters)
 	// Cluster the features based on the cluster_count
 	cuttree(numFeatures, hTree, numClusters, clusterID);
 
+    // Find the number of features in each cluster
     for(i = 0; i < numFeatures; i++)
     {
         index = clusterID[i];
@@ -507,11 +509,11 @@ bool BagOfFeatures::cutHierarchicalTree(int numClusters)
         }
 	}
 
-
 	for(i = 0; i < numClusters; i++)
 	{
         ptrCenter = (float *)(dictionary->data.ptr + i * dictionary->step);
         //cout << i << " \t\t\t" << indexCount[i] << endl << endl;
+        float t = indexCount[i];
         for(j = 0; j < descrSize; j++)
         {
             ptrCenter[j] /= (float)indexCount[i];
@@ -519,40 +521,42 @@ bool BagOfFeatures::cutHierarchicalTree(int numClusters)
     }
 
 
-/*
+
     int k;
     float *checkData = new float [descrSize];
     float minDist;
     float dist;
+    int temp;
     int minIndex;
 
-    for(i = 0; i < numClusters; i++)
+    for(i = 0; i < numFeatures; i++)
     {
-        ptrCenter = (float*)(dictionary->data.ptr + i*dictionary->step);
-        for(j = 0; j < descrSize; j++)
-        {
-            checkData[j] = ptrCenter[j];
-        }
         minDist = 999999.;
-        for(j = 0; j < numFeatures; j++)
+        for(j = 0; j < numClusters; j++)
         {
+            ptrCenter = (float*)(dictionary->data.ptr + j*dictionary->step);
+            for(k = 0; k < descrSize; k++)
+            {
+                checkData[k] = ptrCenter[k];
+            }
             dist = 0;
             for(k = 0; k < descrSize; k++)
             {
-                dist += (checkData[k] - hClusterData[j][k])*(checkData[k] - hClusterData[j][k]);
+                dist += (checkData[k] - hClusterData[i][k])*(checkData[k] - hClusterData[i][k]);
             }
-            dist = sqrt(dist);
+            dist /= descrSize;//sqrt(dist);
             if(dist < minDist)
             {
                 minDist = dist;
                 minIndex = j;
             }
         }
-        if(minDist != 0)
+        temp = clusterID[i];
+        if(minIndex != clusterID[i])
             cout << "PROBLEM DURING CLUSTERING" << endl;
     }
     delete [] checkData;
-*/
+
 
     delete [] clusterID;
 	delete [] indexCount;
@@ -803,6 +807,15 @@ void BagOfFeatures::trainSVM(int type = NU_SVC,
                             int probability = 0,
                             int weight = 0)
 {
+    if(SVMModel != NULL)
+    {
+        svm_destroy_model(SVMModel);
+        //svm_destroy_param(&SVMParam);
+    }
+
+
+
+
     int i, j, k, l = -1;
     int totalData = 0;
     int size, length = dictionary->rows;
@@ -842,7 +855,7 @@ void BagOfFeatures::trainSVM(int type = NU_SVC,
             {
                 if(trainObject[i].histogramSet.histogram[j][k] != 0)
                 {
-                    SVMProblem.x[l][count].index = k+1;
+                    SVMProblem.x[l][count].index = k;
                     SVMProblem.x[l][count].value = trainObject[i].histogramSet.histogram[j][k];
                     cout << "(" << SVMProblem.x[l][count].index
                         << ", " << SVMProblem.x[l][count].value << ")" << endl;
@@ -885,6 +898,7 @@ void BagOfFeatures::trainSVM(int type = NU_SVC,
     // Don't change the weights
     SVMParam.nr_weight = weight;
 
+
     double* target = new double [totalData];
     svm_check_parameter(&SVMProblem, &SVMParam);
     svm_cross_validation(&SVMProblem, &SVMParam, 10, target);
@@ -908,8 +922,13 @@ void BagOfFeatures::trainSVM_CV(int type, int kernel, double degree, double gamm
     for(i = 0; i < numClasses; i++)
         totalData += data[i].getTrainSize();
 
-    CvMat* trainData = cvCreateMat(totalData, dictionary->rows, CV_32FC1);
-    CvMat* dataLabel = cvCreateMat(totalData, 1, CV_32FC1);
+    //CvMat* trainData = cvCreateMat(totalData, dictionary->rows, CV_32FC1);
+    //CvMat* dataLabel = cvCreateMat(totalData, 1, CV_32FC1);
+
+    float** trainData = new float* [totalData];
+    float* dataLabel = new float [totalData];
+    for(i = 0; i < totalData; i++)
+        trainData[i] = new float [dictionary->rows];
 
      // For each class
     for(i = 0; i < numClasses; i++)
@@ -920,12 +939,14 @@ void BagOfFeatures::trainSVM_CV(int type, int kernel, double degree, double gamm
         {
             l++;
             //Attach the label to it
-            dataLabel->data.fl[l] = (float)data[i].getLabel();
-            dPtr = (float*)(trainData->data.ptr + l*trainData->step);
+            //dataLabel->data.fl[l] = (float)data[i].getLabel();
+            //dPtr = (float*)(trainData->data.ptr + l*trainData->step);
+            dataLabel[l] = (float)data[i].getLabel();
             // Copy the histograms
             for(k = 0; k < length; k++)
             {
-                dPtr[k] = trainObject[i].histogramSet.histogram[j][k];
+                //dPtr[k] = trainObject[i].histogramSet.histogram[j][k];
+                trainData[l][k] = trainObject[i].histogramSet.histogram[j][k];
             }
         }
     }
@@ -939,28 +960,36 @@ void BagOfFeatures::trainSVM_CV(int type, int kernel, double degree, double gamm
     SVMParam_CV.nu = nu;
     SVMParam_CV.p = p;
     SVMParam_CV.class_weights = NULL;
-    SVMParam_CV.term_crit.epsilon = eps;
-    SVMParam_CV.term_crit.max_iter = iterations;
-    SVMParam_CV.term_crit.type = termType;
+    SVMParam_CV.term_crit = cvTermCriteria(termType, iterations, eps);
 
+    CvMat *dataHeader = cvCreateMatHeader(totalData, dictionary->rows, CV_32FC1);
+	CvMat *labelHeader = cvCreateMatHeader(totalData, 1, CV_32FC1);
+    cvInitMatHeader(dataHeader, totalData, dictionary->rows, CV_32FC1, trainData);
+	cvInitMatHeader(labelHeader, totalData, 1, CV_32FC1, dataLabel);
     //Train the SVM
     //CvSVM svm(trainData, dataLabel, 0, 0,
     //    CvSVMParams(CvSVM::C_SVC, CvSVM::LINEAR, 0, 0, 0, 2,
      //   0, 0, 0, cvTermCriteria(CV_TERMCRIT_EPS,0, 0.01)));
 
     //strcpy(classifierFile, fileName);
+    if(SVMModel_CV != NULL)
+        delete SVMModel_CV;
 
-    SVMModel_CV.train_auto(trainData, dataLabel, 0, 0, SVMParam_CV, 10);
+    SVMModel_CV = new CvSVM;
+    SVMModel_CV->train_auto(dataHeader, labelHeader, 0, 0, SVMParam_CV, 10);
     //SVMModel_CV.save(classifierFile);
 
-    cvReleaseMat(&trainData);
-    cvReleaseMat(&dataLabel);
-
+    cvReleaseMatHeader(&dataHeader);
+    cvReleaseMatHeader(&labelHeader);
+    for(i = 0; i < totalData; i++)
+        delete [] trainData[i];
+    delete [] trainData;
+    delete [] dataLabel;
     classifierType = CVSVM_CLASSIFIER;
 
 }
 
-void BagOfFeatures::trainNormBayes_CV(char* fileName)
+void BagOfFeatures::trainNormBayes_CV()
 {
     int i, j, k, l = -1;
     int totalData = 0;
@@ -995,9 +1024,11 @@ void BagOfFeatures::trainNormBayes_CV(char* fileName)
 
     //strcpy(classifierFile, fileName);
 
-    CvNormalBayesClassifier NBModel_CV;
+    if(NBModel_CV != NULL)
+        delete NBModel_CV;
 
-    NBModel_CV.train(trainData, dataLabel, 0, 0, false);
+    NBModel_CV = new CvNormalBayesClassifier;
+    NBModel_CV->train(trainData, dataLabel, 0, 0, false);
     //NBModel_CV.save(classifierFile);
 
     cvReleaseMat(&trainData);
@@ -1008,16 +1039,12 @@ void BagOfFeatures::trainNormBayes_CV(char* fileName)
 }
 
 
-
-
-
-
 float* BagOfFeatures::resultsTraining()
 {
     int i, j, k;
     int size;
     float classification;
-    float t;
+    double t;
     float* results = new float [numClasses];
 /*
     CvSVM SVMModel_CV;
@@ -1044,7 +1071,8 @@ float* BagOfFeatures::resultsTraining()
                 trainData[k].index = -1;
 
                 classification = svm_predict(SVMModel, trainData);
-                if(abs(classification - (float)data[i].getLabel()) < t)
+                t = fabs((double)data[i].getLabel()-classification);
+                if(t < .5)
                     results[i]++;
 
                 delete [] trainData;
@@ -1057,7 +1085,7 @@ float* BagOfFeatures::resultsTraining()
                     sample->data.fl[k] = trainObject[i].histogramSet.histogram[j][k];//assign value
                 }
 
-                classification = SVMModel_CV.predict(sample);
+                classification = SVMModel_CV->predict(sample);
                 t = fabs((float)data[i].getLabel()-classification);
                 if(t < .5)
                     results[i]++;
@@ -1072,8 +1100,9 @@ float* BagOfFeatures::resultsTraining()
                     sample->data.fl[k] = trainObject[i].histogramSet.histogram[j][k];//assign value
                 }
 
-                //classification = NBModel_CV.predict(sample);
-                if(classification == data[i].getLabel())
+                classification = NBModel_CV->predict(sample);
+                t = fabs((float)data[i].getLabel()-classification);
+                if(t < .5)
                     results[i]++;
 
                 cvReleaseMat(&sample);
@@ -1117,7 +1146,8 @@ float* BagOfFeatures::resultsValidation()
                 validData[k].index = -1;
 
                 classification = svm_predict(SVMModel, validData);
-                if(fabs(classification - (float)data[i].getLabel()) < .5)
+                t = fabs((float)data[i].getLabel()-classification);
+                if(t < .5)
                     results[i]++;
 
                 delete [] validData;
@@ -1130,12 +1160,28 @@ float* BagOfFeatures::resultsValidation()
                     sample->data.fl[k] = validObject[i].histogramSet.histogram[j][k];//assign value
                 }
 
-                classification = SVMModel_CV.predict(sample);
+                classification = SVMModel_CV->predict(sample);
                 t = fabs((float)data[i].getLabel()-classification);
                 if(t < .5)
                     results[i]++;
 
                 cvReleaseMat(&sample);
+            }
+            else if(classifierType == CVNORM_BAYES_CLASSIFIER)
+            {
+                CvMat* sample = cvCreateMat(1, dictionary->rows, CV_32FC1);
+                for(k = 0; k < dictionary->rows; k++)
+                {
+                    sample->data.fl[k] = validObject[i].histogramSet.histogram[j][k];//assign value
+                }
+
+                classification = NBModel_CV->predict(sample);
+                t = fabs((float)data[i].getLabel()-classification);
+                if(t < .5)
+                    results[i]++;
+
+                cvReleaseMat(&sample);
+
             }
 
         }
@@ -1178,8 +1224,9 @@ float* BagOfFeatures::resultsTest()
                 //svm_check_probability_model(SVMModel);
                 //svm_predict_probability(SVMModel, testData, values);
                 //for(k = 0; k < numClasses*(numClasses-1)/2; k++)
-                 //   classification = values[k];
-                if(fabs(classification - (float)data[i].getLabel()) < .5)
+                //   classification = values[k];
+                t = fabs((float)data[i].getLabel()-classification);
+                if(t < .5)
                     results[i]++;
 
                 delete [] testData;
@@ -1193,7 +1240,22 @@ float* BagOfFeatures::resultsTest()
                     sample->data.fl[k] = testObject[i].histogramSet.histogram[j][k];//assign value
                 }
 
-                classification = SVMModel_CV.predict(sample);
+                classification = SVMModel_CV->predict(sample);
+                t = fabs((float)data[i].getLabel()-classification);
+                if(t < .5)
+                    results[i]++;
+
+                cvReleaseMat(&sample);
+            }
+             else if(classifierType == CVNORM_BAYES_CLASSIFIER)
+            {
+                CvMat* sample = cvCreateMat(1, dictionary->rows, CV_32FC1);
+                for(k = 0; k < dictionary->rows; k++)
+                {
+                    sample->data.fl[k] = testObject[i].histogramSet.histogram[j][k];//assign value
+                }
+
+                classification = NBModel_CV->predict(sample);
                 t = fabs((float)data[i].getLabel()-classification);
                 if(t < .5)
                     results[i]++;
@@ -1242,7 +1304,7 @@ void copySIFTPts(ImageFeatures &dst, feature* src, const int size, const int len
 
 void copySURFPts(ImageFeatures &dst, const IpVec src, const int length)
 {
-	int i, size;
+	int i, j, size;
 	Ipoint temp;
 	size = src.size();
 	//Check if the object has been allocated
@@ -1254,6 +1316,12 @@ void copySURFPts(ImageFeatures &dst, const IpVec src, const int length)
 	for(i = 0; i < size; i++)
 	{
 		temp = src.at(i);
+		float mag = 0;
+		for(j = 0; j < length; j++)
+            mag += temp.descriptor[j]*temp.descriptor[j];
+        mag = sqrt(mag);
+        for(j = 0; j < length; j++)
+            temp.descriptor[j] *= mag;
 		// Copy each descriptor into the ImageFeature
 		dst.copyDescriptorAt(temp.descriptor, i);
 
@@ -1271,6 +1339,9 @@ int findDictionaryMatch(float* descriptor, CvMat* dict, int length)
 
     CvMat* vect1 = cvCreateMat(1, length, CV_32FC1);
 	CvMat* vect2 = cvCreateMat(1, length, CV_32FC1);
+	CvMat* id = cvCreateMat(length, length, CV_32FC1);
+	cvSetIdentity(id);
+
 	float* ptr1 = NULL;
 	float* ptr2 = NULL;
 
@@ -1284,6 +1355,9 @@ int findDictionaryMatch(float* descriptor, CvMat* dict, int length)
     // For each dictionary word
     for(j = 0; j < count; j++)
     {
+        cvGetRow(dict, vect2, j);
+        tempDistance = cvMahalanobis(vect1, vect2, id);
+        /*
         // Get the second vector (word from the list)
         ptr2 = (float*)(vect2->data.ptr);
         for(k = 0; k < length; k++)
@@ -1296,7 +1370,8 @@ int findDictionaryMatch(float* descriptor, CvMat* dict, int length)
             tempDistance += (ptr2[k] - ptr1[k])*(ptr2[k] - ptr1[k]);
         }
         // calculate the euclidean distance
-        tempDistance = sqrt(tempDistance);
+        tempDistance /= length; //sqrt(tempDistance);*/
+
         if(tempDistance < minDistance)
         {
             // get the smallest distance and keep track of the index of the min

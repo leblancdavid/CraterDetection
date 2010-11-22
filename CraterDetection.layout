@@ -64,11 +64,11 @@
 	<File name="Surf/util.h" open="0" top="0" tabpos="10">
 		<Cursor position="1191" topLine="15" />
 	</File>
-	<File name="bagoffeatures.cpp" open="1" top="0" tabpos="2">
-		<Cursor position="31192" topLine="941" />
+	<File name="bagoffeatures.cpp" open="1" top="1" tabpos="2">
+		<Cursor position="42380" topLine="602" />
 	</File>
 	<File name="bagoffeatures.h" open="1" top="0" tabpos="3">
-		<Cursor position="3409" topLine="58" />
+		<Cursor position="3996" topLine="117" />
 	</File>
 	<File name="datasetinfo.cpp" open="0" top="0" tabpos="4">
 		<Cursor position="3549" topLine="189" />
@@ -85,13 +85,13 @@
 	<File name="libCluster/cluster.c" open="0" top="0" tabpos="0">
 		<Cursor position="93905" topLine="3122" />
 	</File>
-	<File name="libSVM/svm.cpp" open="0" top="0" tabpos="5">
-		<Cursor position="59401" topLine="2904" />
+	<File name="libSVM/svm.cpp" open="1" top="0" tabpos="6">
+		<Cursor position="13628" topLine="677" />
 	</File>
 	<File name="libSVM/svm.h" open="0" top="0" tabpos="6">
 		<Cursor position="412" topLine="17" />
 	</File>
-	<File name="main.cpp" open="1" top="1" tabpos="1">
-		<Cursor position="1515" topLine="75" />
+	<File name="main.cpp" open="1" top="0" tabpos="1">
+		<Cursor position="2682" topLine="54" />
 	</File>
 </CodeBlocks_layout_file>

@@ -42,8 +42,8 @@ int main(int argc, char** argv)
 
     ofstream validResultsFile;
     ofstream testResultsFile;
-    validResultsFile.open("Results/HCluster/ValidResultsSet01c_SIFT");
-    testResultsFile.open("Results/HCluster/TestResultsSet01c_SIFT");
+    validResultsFile.open("Results/HCluster/ValidResultsSet01_SURF_CVSVM");
+    testResultsFile.open("Results/HCluster/TestResultsSet01_SURF_CVSVM");
 
     cout << "Creating the Crater Bag of Features..." << endl;
     // Allocate the Bag of Features
@@ -52,8 +52,8 @@ int main(int argc, char** argv)
 
     cout << "Extracting Features..." << endl;
     // Extract SURF features from the data set based on default values
-    //craterBoF.extractSURFFeatures(false, 10, 10, 1, 0.00008f);
-    craterBoF.extractSIFTFeatures(7, 1.6, 0.04, 10, 1, SIFT_DESCR_WIDTH, SIFT_DESCR_HIST_BINS);
+    craterBoF.extractSURFFeatures(false, 10, 10, 1, 0.0002f);
+    //craterBoF.extractSIFTFeatures(7, 1.6, 0.04, 10, 1, SIFT_DESCR_WIDTH, SIFT_DESCR_HIST_BINS);
 
 
     cout << "\n\tNumber of Features extracted for training: " << craterBoF.getNumFeatures() << endl << endl;
@@ -67,23 +67,27 @@ int main(int argc, char** argv)
 
     cout << "\n\nBuilding Hierarchical Tree..." << endl;
     // Build the hierarchical tree
-    craterBoF.buildHierarchicalTree();
+    //craterBoF.buildHierarchicalTree(0, 'e', 's', NULL);
 
     for(i = 0; i < 80; i++)
     {
-        n = (i+1)*25;
+        n = (i+1)*200;
         cout << "\n\nCutting the tree with " << n << " clusters..."<< endl;
         // Cut the tree
-        craterBoF.cutHierarchicalTree(n);
+        //craterBoF.cutHierarchicalTree(n);
+
+        craterBoF.buildKMeans(n, cvTermCriteria(CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 20, 0.001), 10);
 
         cout << "Building the Histograms..." << endl;
         // Build the histograms
         craterBoF.buildBofHistograms(true);
 
-        cout << "Training the System using SVM..." << endl;
-        //craterBoF.trainSVM(NU_SVC, RBF, .05, .05, .5, .9, 2048, 0.00001, 0.01, 0, 1, 0);
-        craterBoF.trainSVM_CV(CvSVM::C_SVC, CvSVM::RBF, 0.6, 0.5, 0.3, 0.6, 0.6, 0.5,
-                              CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 500, 0.000001, classifierFile);
+        //cout << "Training the system using SVM..." << endl;
+        craterBoF.trainSVM(NU_SVR, RBF, .5, .05, .5, 5, 2048, 0.00001, 0.01, 0, 1, 0);
+        //craterBoF.trainSVM_CV(CvSVM::SVR, CvSVM::RBF, 0.2, 2, 0.2, 0.2, 0.95, 0.2,
+        //                     CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 50, 0.000001, classifierFile);
+        //cout << "Training the system using Normal Bayes Classifier..." << endl;
+        //craterBoF.trainNormBayes_CV();
 
         float *resultsTrain = craterBoF.resultsTraining();
         cout << "Results:" << endl;
