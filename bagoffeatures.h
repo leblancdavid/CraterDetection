@@ -35,21 +35,8 @@ class BagOfFeatures
             return numFeatures;
         };
 
-
-
         // Feature Extraction
-            // Using SIFT Features
-        bool extractSIFTFeatures()
-        {
-            return extractSIFTFeatures(SIFT_INTVLS,
-                                        SIFT_SIGMA,
-                                        SIFT_CONTR_THR,
-                                        SIFT_CURV_THR,
-                                        SIFT_IMG_DBL,
-                                        SIFT_DESCR_WIDTH,
-                                        SIFT_DESCR_HIST_BINS);
-        }
-
+        // Using SIFT Features
         bool extractSIFTFeatures(int lvls,
                                 double sigma,
                                 double thresh1,
@@ -57,11 +44,7 @@ class BagOfFeatures
                                 int dbl,
                                 int width,
                                 int bins);
-        bool extractSURFFeatures()
-        {
-            return extractSURFFeatures( true, 10, 10, 1, 0.0004f);
-        };
-            // Using SURF Features
+        // Using SURF Features
         bool extractSURFFeatures(bool invariant,
                                 int octaves,
                                 int intervals,
@@ -69,41 +52,38 @@ class BagOfFeatures
                                 float thresh);
 
         // Clustering Methods
-            //Hierarchical Clustering
-        bool buildHierarchicalTree()
-        {
-            return buildHierarchicalTree(0, 'e', 's', NULL);
-        };
+        //Hierarchical Clustering
         bool buildHierarchicalTree(int transpose,
                                 char dist,
                                 char method,
                                 double** distmatrix);
         bool cutHierarchicalTree(int numClusters);
 
-            //K-Means
+        //K-Means
         bool buildKMeans(int numClusters,
-                        CvTermCriteria criteria,
-                        int repeat);
+                         CvTermCriteria criteria,
+                         int repeat);
+
+        // C-Clustering lib kCluster function
+        bool buildKClustering(int numClusters,
+                            int pass,
+                            char method,
+                            char dist);
 
         // Building the Histograms
         bool buildBofHistograms(bool normalize);
 
-        void trainSVM()
-        {
-            trainSVM(NU_SVC, RBF, 0.05, 0.25, 0.5, .05, 300, 0.000001, 0.5, 0, 0, 0);
-        };
         // Training the BoF
         void trainSVM(int type, int kernel, double degree, double gamma, double coef0,
                         double C, double cache, double eps, double nu,
                         int shrinking, int probability, int weight);
 
         //Training using the opencv function
-        void trainSVM_CV(int type, int kernel, double degree, double gamma, double coef0,
-                        double C, double nu, double p,
-                        int termType, int iterations, double eps,
-                        char* fileName);
+        void trainSVM_CV(int type, int kernel, double degree, double gamma,
+                         double coef0, double C, double nu, double p, int termType,
+                         int iterations, double eps, char* fileName);
 
-        void trainNormBayes_CV();
+        void trainNormBayes_CV(char* fileName);
 
         // Computing the results
         float* resultsTraining();
@@ -132,10 +112,10 @@ class BagOfFeatures
         struct svm_parameter SVMParam;
         struct svm_model *SVMModel;
 
-        CvSVMParams SVMParam_CV;
-        CvSVM* SVMModel_CV;
+        // The OpenCV algorithms, don't work well right now
+        CvSVM SVMModel_CV;
+        CvNormalBayesClassifier NBModel_CV;
 
-        CvNormalBayesClassifier* NBModel_CV;
-        //char classifierFile[64];
+        char classifierFile[64];
 
 };
